@@ -1,2 +1,2 @@
-# oop_labs
+# OOP Laboratories
 Serchiziuc Vladislav's laboratories for oop FAF-253
