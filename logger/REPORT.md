@@ -67,23 +67,10 @@ The validator calls `self.logger.trace(...)` when it finds an opening parenthesi
 `()` is valid, while `)(` is invalid.
 
 **Explain how the program determines whether the input is valid.**  
-The counter increases for `(` and decreases for `)`. If it becomes negative, a closing parenthesis has no matching opening parenthesis. At the end, the counter must be zero. Other characters are rejected.
+The counter increases for `(` and decreases for `)`. If it becomes negative, a closing parenthesis has no matching opening parenthesis. At the end, the counter must be zero (which means that all parentheses have their own pairs). Other characters are rejected.
 
 **Describe one test that helped you find or prevent an error.**  
 The `)(` test checks that equal counts alone are insufficient: the order must also be correct.
-
-The required examples produced these results:
-
-| Input | Result |
-|---|---|
-| `()` | `True` |
-| `)((()))` | `False` |
-| `(` | `False` |
-| `(())((()())())` | `True` |
-
-Additional automated checks covered 3,280 strings, severity filtering, shared settings, formatting, and `%r`. Testing identified an unhandled `ValueError` when entering letters for the log level. This was fixed by adding input validation. All 16 test groups passed after the fix.
-
-The validator takes O(n) time and O(1) auxiliary space, excluding logging output.
 
 ## 6. Reflection
 
@@ -91,4 +78,4 @@ The validator takes O(n) time and O(1) auxiliary space, excluding logging output
 The most important concept was the difference between class and instance attributes. Each logger has its own name, while the logging level and format are shared. This allows common settings while preserving each object’s identity.
 
 **If you had more time, what would you improve in your design, and why?**  
-A useful improvement would be allowing the logger to write messages to a file as well as the console. This would preserve the logs for inspection after the program finishes.
+To be honest, I wanted to try to do this laboratory in C++, because I use Python too much, and wanted to learn something new. So if I had more time, I would really like to recreate this laboratory in C++.
