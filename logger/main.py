@@ -43,14 +43,19 @@ def interactive():
         print(f"{number+1}. {level}")
 
     max_level = len(levels)
-    choice = input(f"Minimum log level [1-{max_level}, default 2]: ") or "2"
+    try:
+        choice = int(
+            input(f"Minimum log level [1-{max_level}, default 2]: ").strip() or "2"
+        )
+    except ValueError:
+        print("Please enter a number.")
+        return
 
-    if not (1 <= int(choice) <= max_level):
+    if not (1 <= choice <= max_level):
         print("Invalid log level.")
         return
 
-    Logger.set_level(levels[int(choice) - 1])
-
+    Logger.set_level(levels[choice - 1])
     # Logger format setup
     print("Placeholders: %t time, %l level, %n name, %m message, %r random text")
     template = input(f"Format [Enter to keep {Logger.format}]: ")
