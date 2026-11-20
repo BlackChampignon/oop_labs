@@ -1,16 +1,39 @@
 import requests
 
-class LMStudioClient():
-    messages = []
-    def __init__(self, model="qwen3-8b", system_prompt="You are a pirate", think=False):
-        self.model = model
-        system_prompt += " /think" if think else " /no_think"
-        self.messages.append(Message(system_prompt, "system"))
 
-    def send(self, input_message, role="user"):
-        self.messages.append(Message(input_message, role))
-        response = requests.post("http://localhost:1234/v1/chat/completions", json={"model": self.model, "messages": [vars(message) for message in self.messages]})
-        self.messages.append(Message(response.json()['choices'][0]["message"]["content"], "assistant"))
+class Agent():
+    def __init__(self, memory_tier=1, think=False):
+        name = "Gena"
+        personality = "A grumpy pirate, who answers in short sentences"
+        self.system_prompt = f"Your name is {name}, {personality}"
+        self.system_prompt += " /think" if think else " /no_think"
+        self.client = LMStudioClient()
+        self.memory = Memory()
+        match memory_tier:
+            case 1:
+                Memory.tier1()
+            case 2:
+                Memory.tier2()
+            case 3:
+                Memory.tier3()
+
+
+    def chat(self, content):
+        self.memory.create_message(content, role="user")
+        history = [{"role": "system", "content": self.system_prompt}] + self.memory.get_messages()
+        response = self.client.send(history)
+        # print(response)
+        self.memory.create_message(response['choices'][0]["message"]["content"], "assistant")
+        return response
+
+
+class LMStudioClient():
+    def __init__(self, model="qwen3-8b", base_url = "http://localhost:1234/v1/chat/completions", think=False):
+        self.base_url = base_url
+        self.model = model
+
+    def send(self, history):
+        response = requests.post(self.base_url, json={"model": self.model, "messages": history})
         return response.json()
 
 
@@ -24,14 +47,36 @@ class Message():
             print("No such role exists, role set to \"user\"")
 
 
+class Memory():
+    messages = []
+    memory = 0
+    @staticmethod
+    def tier1():
+        Memory.memory = 6
+    @staticmethod
+    def tier2():
+        Memory.memory = 12
+    @staticmethod
+    def tier3():
+        Memory.memory = 18
+    def create_message(self, content, role="user"):
+        if len(self.messages) > self.memory + 1:
+            self.messages.pop(0)
+        self.messages.append(Message(content, role))
+    def get_messages(self):
+        return [vars(message) for message in self.messages]
+
+
+
 def main():
-    AI = LMStudioClient()
+    AI = Agent()
     while (True):
         a = input()
         if a == "exit":
             break
         else:
-            print(AI.send(a)['choices'][0]["message"]["content"])
+            print(AI.chat(a)['choices'][0]["message"]["content"])
+            # print(AI.chat(content=a))
             pass
 
 
