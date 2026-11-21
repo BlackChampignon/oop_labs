@@ -1,5 +1,6 @@
 import requests
-
+from datetime import datetime
+import random
 
 class Agent():
     def __init__(self, memory_tier=1, think=False):
@@ -16,7 +17,7 @@ class Agent():
                 Memory.tier2()
             case 3:
                 Memory.tier3()
-
+        self.toolbox = Toolbox()
 
     def chat(self, content):
         self.memory.create_message(content, role="user")
@@ -66,6 +67,22 @@ class Memory():
     def get_messages(self):
         return [vars(message) for message in self.messages]
 
+
+class Toolbox():
+    toolbox = ["get_time", "calculator", "roll_dice", "get_date"]
+    def run(self, tool, input):
+        if tool not in self.toolbox:
+            return "No such tool exists"
+
+        match tool:
+            case "get_time":
+                pass
+            case "calculator":
+                pass
+            case "roll_dice":
+                pass
+            case "get_date":
+                pass
 
 
 def main():
