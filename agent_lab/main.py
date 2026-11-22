@@ -3,6 +3,7 @@ from datetime import datetime
 import random
 from logger import Logger
 import json
+import time
 
 class Agent():
     def __init__(self, memory_tier=1, think=False):
@@ -53,10 +54,12 @@ class Agent():
         history = [{"role": "system", "content": self.system_prompt}] + self.memory.get_messages()
 
         self.logger.trace(f"A request is sent (messages {len(history)-1}); a message \"{content}\" is added to memory")
+        start_time = time.perf_counter()
         response = self.client.send(history)
+        delta_time = time.perf_counter() - start_time
         # print(response)
         if response:
-            self.logger.info(f"Prompt tokens: {response["usage"]["prompt_tokens"]}, Completion tokens: {response["usage"]["completion_tokens"]}, tks: {response["usage"]["total_tokens"]}")
+            self.logger.info(f"Prompt tokens: {response["usage"]["prompt_tokens"]}, Completion tokens: {response["usage"]["completion_tokens"]}, tks: {response["usage"]["completion_tokens"] / delta_time}")
             self.memory.create_message(response['choices'][0]["message"]["content"], "assistant")
 
             # ADD check if tool, => self.chat(tool_response), if not => return response['choices'][0]["message"]["content"]
