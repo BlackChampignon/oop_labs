@@ -90,12 +90,14 @@ for a very long time (a day or so). Until it finally came to me that I just have
 
 The whole laboratory turned out quite good. There's just one thing that still bothers me - the check_tool(). It doesn't just check if the tool is called but also send the response back to LLM. Just renaming it wouldn't suffice me, if I wanted to perfect it, I would try to distinguish the check_tool and chat methods as much as possible, because therer's a infinite loop of calling the tool and sending response.
 
-- Tables:
-1) The link to the main one with the prompts and all calculations: https://docs.google.com/spreadsheets/d/1IPeizg0LwH9XtPCT6MkBA-WCVQaWeYrwqzaiW9Laof0/edit?usp=sharing
-2) And a brief one:
+- Links:
+1) The link to the main table with the prompts and all calculations: https://docs.google.com/spreadsheets/d/1IPeizg0LwH9XtPCT6MkBA-WCVQaWeYrwqzaiW9Laof0/edit?usp=sharing
+2) And a brief table:
 
 | Memory tier | Avg. prompt tokens | Avg. completion tokens | Avg. tok/s |
 |---|---:|---:|---:|
 | Tier 1 | 540.11 | 88.44 | 19.04 |
 | Tier 2 | 707.78 | 88.78 | 19.35 |
 | Tier 3 | 767.56 | 106.33 | 21.72 |
+
+3) Link to the branch of repo: https://github.com/BlackChampignon/oop_labs/tree/agent_lab
