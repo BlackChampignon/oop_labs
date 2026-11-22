@@ -2,6 +2,7 @@ import requests
 from datetime import datetime
 import random
 from logger import Logger
+import json
 
 class Agent():
     def __init__(self, memory_tier=1, think=False):
@@ -20,6 +21,32 @@ class Agent():
             case 3:
                 Memory.tier3()
         self.toolbox = Toolbox(self.logger)
+        self.system_prompt += ("""If you need a tool, answer ONLY with a JSON object, like: { "tool": "calculator", "input": "12 * 7" }""" +
+                               f"Available tools: {", ".join(self.toolbox.toolbox)}" +
+                               """If you do not need a tool, answer normally (NOT JSON).""")
+
+    def check_tool(self, answer):
+        result = ""
+        start = answer.find("{")
+        end = answer.rfind("}")
+
+        tool_call = None
+        if start != -1 and end > start:
+            try:
+                tool_call = json.loads(answer[start:end + 1])
+            except json.JSONDecodeError:
+                tool_call = None
+        if isinstance(tool_call, dict) and "tool" in tool_call:
+            tool = tool_call["tool"]
+            tool_input = tool_call.get("input", "")
+            self.logger.trace(f"Tool call:{tool} with input {tool_input}")
+            result = self.toolbox.run(tool, tool_input)
+            # add "Tool calculator returned: 84" to the conversation,
+            # and ask the model again
+            if result:
+                self.chat(f"Tool {tool} returned: {result}")
+        return result
+
 
     def chat(self, content):
         self.memory.create_message(content, role="user")
@@ -29,8 +56,14 @@ class Agent():
         response = self.client.send(history)
         # print(response)
         if response:
-            self.logger.info("Prompt tokens: {}, Completion tokens: {}, tks: {}")
+            self.logger.info(f"Prompt tokens: {response["usage"]["prompt_tokens"]}, Completion tokens: {response["usage"]["completion_tokens"]}, tks: {response["usage"]["total_tokens"]}")
             self.memory.create_message(response['choices'][0]["message"]["content"], "assistant")
+
+            # ADD check if tool, => self.chat(tool_response), if not => return response['choices'][0]["message"]["content"]
+            result = self.check_tool(response['choices'][0]["message"]["content"])
+            if not result:
+                print(response['choices'][0]["message"]["content"])
+
             return response['choices'][0]["message"]["content"]
 
 
@@ -43,6 +76,7 @@ class LMStudioClient():
     def send(self, history):
         try:
             response = requests.post(self.base_url, json={"model": self.model, "messages": history})
+            # print(response)
             return response.json()
         except requests.exceptions.ConnectionError:
             self.logger.error("LM Studio is not running; the answer cannot be read; a tool fails")
@@ -92,16 +126,19 @@ class Toolbox():
         if tool not in self.toolbox:
             self.logger.error(f"Unknown tool: {tool}")
             return "No such tool exists"
-
-        match tool:
-            case "get_time":
-                pass
-            case "calculator":
-                pass
-            case "roll_dice":
-                pass
-            case "get_date":
-                pass
+        try:
+            match tool:
+                case "get_time":
+                    return datetime.now().strftime("%H:%M:%S")
+                case "calculator":
+                    return eval(input)
+                case "roll_dice":
+                    return random.randint(1, int(input) if input else 6)
+                case "get_date":
+                    return datetime.now().strftime("%Y-%m-%d")
+        except Exception as e:
+            self.logger.error(f"Tool {tool} failed: {e}")
+            return f"Tool execution failed: {e}"
 
 
 def main():
@@ -111,7 +148,7 @@ def main():
         if a == "exit":
             break
         else:
-            print(AI.chat(a))
+            AI.chat(a)
             # print(AI.chat(content=a))
             pass
 
