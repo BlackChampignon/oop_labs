@@ -54,9 +54,9 @@ class Agent():
         history = [{"role": "system", "content": self.system_prompt}] + self.memory.get_messages()
 
         self.logger.trace(f"A request is sent (messages {len(history)-1}); a message \"{content}\" is added to memory")
-        start_time = time.perf_counter()
-        response = self.client.send(history)
-        delta_time = time.perf_counter() - start_time
+        # start_time = time.perf_counter()
+        response, delta_time = self.client.send(history)
+        # delta_time = time.perf_counter() - start_time
         # print(response)
         if response:
             self.logger.info(f"Prompt tokens: {response["usage"]["prompt_tokens"]}, Completion tokens: {response["usage"]["completion_tokens"]}, tks: {response["usage"]["completion_tokens"] / delta_time}")
@@ -78,12 +78,14 @@ class LMStudioClient():
 
     def send(self, history):
         try:
+            start_time = time.perf_counter()
             response = requests.post(self.base_url, json={"model": self.model, "messages": history})
+            delta_time = time.perf_counter() - start_time
             # print(response)
-            return response.json()
+            return response.json(), delta_time
         except requests.exceptions.ConnectionError:
             self.logger.error("LM Studio is not running; the answer cannot be read; a tool fails")
-        return ""
+        return "", 1
 
 
 class Message():
